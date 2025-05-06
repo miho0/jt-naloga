@@ -1,12 +1,13 @@
 import json
 import string
+from collections import defaultdict
+
 import nltk
+from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
-from nltk.corpus import stopwords
-from collections import defaultdict
+from sklearn.model_selection import train_test_split
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -55,15 +56,13 @@ def load_balanced_dataset(file_path, samples_per_class):
 
 
 def main():
-    X, y = load_balanced_dataset("dataset.json", SAMPLES_PER_CLASS)
+    X, y = load_balanced_dataset("archive/dataset.json", SAMPLES_PER_CLASS)
 
     print(f"Loaded {len(X)} samples ({SAMPLES_PER_CLASS} per class)")
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-    vectorizer = TfidfVectorizer(ngram_range=(
-        MIN_N_GRAMS, MAX_N_GRAMS), max_features=NUM_FEATURES)
+    vectorizer = TfidfVectorizer(ngram_range=(MIN_N_GRAMS, MAX_N_GRAMS), max_features=NUM_FEATURES)
     X_train_tfidf = vectorizer.fit_transform(X_train)
     X_test_tfidf = vectorizer.transform(X_test)
 

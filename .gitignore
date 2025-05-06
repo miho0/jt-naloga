@@ -1,1 +1,6 @@
 *.json
+*.docx
+*.png
+
+archive
+script_old.py

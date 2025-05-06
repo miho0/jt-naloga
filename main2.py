@@ -8,6 +8,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+from nltk.corpus import stopwords
+from collections import defaultdict
+import joblib
+import argparse
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -18,7 +23,7 @@ SAMPLES_PER_CLASS = 26000  # ker jih mamo 26k za fear jih vec nemoremo
 # unigrami - 5-grami
 # lahko se spilamo malo s totimi vrednostmi
 MIN_N_GRAMS = 1
-MAX_N_GRAMS = 5
+MAX_N_GRAMS = 4
 NUM_FEATURES = 30000
 
 
@@ -55,8 +60,8 @@ def load_balanced_dataset(file_path, samples_per_class):
     return texts, labels
 
 
-def main():
-    X, y = load_balanced_dataset("archive/dataset.json", SAMPLES_PER_CLASS)
+def train():
+    X, y = load_balanced_dataset("dataset.json", SAMPLES_PER_CLASS)
 
     print(f"Loaded {len(X)} samples ({SAMPLES_PER_CLASS} per class)")
 
@@ -71,6 +76,46 @@ def main():
 
     y_pred = clf.predict(X_test_tfidf)
     print(classification_report(y_test, y_pred, digits=3))
+
+    joblib.dump(clf, 'emotion_classifier_model.joblib')
+    joblib.dump(vectorizer, 'tfidf_vectorizer.joblib')
+
+    print("Model and vectorizer saved!")
+
+
+def predict_emotion(song_lyrics):
+    clf = joblib.load('emotion_classifier_model.joblib')
+    vectorizer = joblib.load('tfidf_vectorizer.joblib')
+    cleaned_lyrics = clean_text(song_lyrics)
+
+    song_tfidf = vectorizer.transform([cleaned_lyrics])
+
+    # Predict the emotion using the trained model
+    prediction = clf.predict(song_tfidf)
+
+    return prediction[0]
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Song Sentiment Prediction')
+
+    parser.add_argument('--train', action='store_true', help='Train the model')
+    parser.add_argument('--predict', type=str,
+                        help='File path to the song lyrics for prediction')
+
+    args = parser.parse_args()
+
+    if args.train:
+        print("Training the model...")
+        train()
+    elif args.predict:
+        print(f"Predicting emotion for song in: {args.predict}")
+        with open(args.predict, "r", encoding="utf-8") as file:
+            song_lyrics = file.read()
+            prediction = predict_emotion(song_lyrics)
+            print(f"The predicted emotion for the song is: {prediction}")
+    else:
+        print("Please specify either --train or --predict.")
 
 
 if __name__ == "__main__":

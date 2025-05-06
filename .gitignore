@@ -1,4 +1,5 @@
 *.json
+*.joblib
 *.docx
 *.png
 
